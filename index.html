@@ -281,7 +281,7 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   recognition.onerror = (event) => { console.error("Speech recognition error:", event.error); };
 } else {
   voiceBtn.disabled = true;
-  voiceBtn.textContent = "🎤❌";
+  voiceBtn.textContent = "Sesli Mesaj🎤❌";
 }
 
 voiceBtn.onclick = () => {
@@ -332,3 +332,4 @@ input.addEventListener('focus', () => {
 
 </body>
 </html>
+
