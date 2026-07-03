@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SwersGPT</title>
+<link rel="icon" href="https://i.hizliresim.com/82fpag2.png">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SwersGPT">
+<link rel="apple-touch-icon" href="https://i.hizliresim.com/82fpag2.png">
+
+<style>
+* { box-sizing: border-box; margin:0; padding:0; }
+body {
+  height: 100dvh;
+  background: #121212;
+  color: #fff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial;
+  display: flex;
+  flex-direction: column;
+}
+
+.top {
+  background: #1e1e1e;
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #333;
+  padding-top: calc(env(safe-area-inset-top) + 10px);
+}
+
+.title { font-size: 20px; font-weight: 700; }
+
+.top-buttons { display: flex; gap: 8px; overflow-x: auto; }
+.top-buttons button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  color: white;
+  white-space: nowrap;
+}
+#aboutBtn { background:#2ecc71; }
+#privacyBtn { background:#3498db; }
+#kvkkBtn { background:#9b59b6; }
+#downloadBtn { background: linear-gradient(135deg,#00c6ff,#0072ff); }
+#resetKeyBtn { background:#ff6b6b; }
+
+.chat {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.msg {
+  padding: 14px 18px;
+  border-radius: 14px;
+  max-width: 92%;
+  font-size: clamp(15px, 3.8vw, 17px);
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.user { background:#0f3d0f; align-self:flex-end; }
+.ai { background:#1a1a1a; align-self:flex-start; }
+
+.typing::after {
+  content: "▍";
+  animation: blink 1s infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* Bekleme animasyonu (3 Nokta Zıplama) */
+.dots {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  height: 24px;
+}
+.dots span {
+  width: 6px;
+  height: 6px;
+  background-color: #aaa;
+  border-radius: 50%;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+.dots span:nth-child(1) { animation-delay: -0.32s; }
+.dots span:nth-child(2) { animation-delay: -0.16s; }
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+.input-area {
+  display: flex;
+  gap: 10px;
+  padding: 14px;
+  background: #1e1e1e;
+  border-top: 1px solid #333;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+}
+
+#input {
+  flex: 1;
+  padding: 14px 18px;
+  border-radius: 25px;
+  border: none;
+  background: #2a2a2a;
+  color: white;
+  font-size: 16px;
+  outline: none;
+}
+
+#voiceBtn {
+  padding: 0 14px;
+  border-radius: 25px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  color: white;
+  background: #ff9900;
+}
+
+#send {
+  padding: 0 20px;
+  border-radius: 25px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  color: white;
+  background: #6e56cf;
+}
+
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.95);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal {
+  background: #1e1e1e;
+  padding: 26px;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal input {
+  width: 100%;
+  padding: 12px;
+  background: #333;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  margin-top: 10px;
+}
+
+.modal button {
+  margin-top: 14px;
+  padding: 12px;
+  width: 100%;
+  border-radius: 8px;
+  border: none;
+  background: #1e90ff;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<div id="aboutModal" class="modal-bg">
+  <div class="modal">
+    <h2>Hakkımızda</h2>
+    <p>SwersGPT, Aury tarafından geliştirilen bir yapay zeka sohbet uygulamasıdır. Sponsorluk ve işbirliği için swersgpt@gmail.com.</p>
+    <button onclick="closeAll()">Kapat</button>
+  </div>
+</div>
+<div id="privacyModal" class="modal-bg">
+  <div class="modal">
+    <h2>Gizlilik</h2>
+    <p>Mesajlar kayıt edilmez. Tüm yapay zeka işlemleri güvenli sunucumuz üzerinden yürütülür.</p>
+    <button onclick="closeAll()">Kapat</button>
+  </div>
+</div>
+<div id="kvkkModal" class="modal-bg">
+  <div class="modal">
+    <h2>KVKK</h2>
+    <p>6698 sayılı KVKK kapsamında kişisel veri toplanmaz.</p>
+    <button onclick="closeAll()">Kapat</button>
+  </div>
+</div>
+
+<div class="top">
+  <div class="title">SwersGPT</div>
+  <div class="top-buttons">
+    <button id="aboutBtn">Hakkımızda</button>
+    <button id="privacyBtn">Gizlilik</button>
+    <button id="kvkkBtn">KVKK</button>
+    <button id="downloadBtn">⬇ Windows</button>
+  </div>
+</div>
+
+<div id="chat" class="chat"></div>
+
+<div class="input-area">
+  <input id="input" placeholder="Mesaj yaz...">
+  <button id="voiceBtn">Sesli Mesaj🎤</button>
+  <button id="send">Gönder</button>
+</div>
+
+<script>
+const chat = document.getElementById("chat");
+const input = document.getElementById("input");
+const aboutBtn = document.getElementById("aboutBtn");
+const privacyBtn = document.getElementById("privacyBtn");
+const kvkkBtn = document.getElementById("kvkkBtn");
+const downloadBtn = document.getElementById("downloadBtn");
+const aboutModal = document.getElementById("aboutModal");
+const privacyModal = document.getElementById("privacyModal");
+const kvkkModal = document.getElementById("kvkkModal");
+const sendBtn = document.getElementById("send");
+const voiceBtn = document.getElementById("voiceBtn");
+
+function addMsg(text, cls, isHtml = false) {
+  const d = document.createElement("div");
+  d.className = "msg " + cls;
+  if (isHtml) d.innerHTML = text;
+  else d.textContent = text;
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+  return d;
+}
+
+function typeText(el, text, speed = 18) {
+  el.textContent = "";
+  el.classList.add("typing");
+  let i = 0;
+  const t = setInterval(() => {
+    el.textContent += text[i++];
+    chat.scrollTop = chat.scrollHeight;
+    if (i >= text.length) {
+      clearInterval(t);
+      el.classList.remove("typing");
+    }
+  }, speed);
+}
+
+// Başlangıç mesajı
+addMsg("Merhaba! Ben SwersGPT. Yapımcım Aury. Sana nasıl yardımcı olabilirim?", "ai");
+
+aboutBtn.onclick = () => aboutModal.style.display = "flex";
+privacyBtn.onclick = () => privacyModal.style.display = "flex";
+kvkkBtn.onclick = () => kvkkModal.style.display = "flex";
+function closeAll() { aboutModal.style.display = privacyModal.style.display = kvkkModal.style.display = "none"; }
+
+downloadBtn.onclick = () => {
+  window.open("https://github.com/SwersGPT/SwersGPT.github.io/releases/download/1.0/SwersGPT.exe","_blank");
+};
+
+let recognition;
+let isRecognizing = false;
+
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = 'tr-TR';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => { isRecognizing = true; };
+  recognition.onend = () => { isRecognizing = false; };
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    input.value = transcript;
+    sendMessage();
+  };
+  recognition.onerror = (event) => { 
+    console.error("Speech recognition error:", event.error); 
+    isRecognizing = false;
+  };
+} else {
+  voiceBtn.disabled = true;
+  voiceBtn.textContent = "Sesli Mesaj🎤❌";
+}
+
+voiceBtn.onclick = () => {
+  if (recognition && !isRecognizing) recognition.start();
+};
+
+sendBtn.onclick = sendMessage;
+input.onkeydown = e => { if (e.key === "Enter") sendMessage(); };
+
+async function sendMessage() {
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = "";
+  addMsg(text, "user");
+
+  const aiMsg = addMsg("<div class='dots'><span></span><span></span><span></span></div>", "ai", true);
+
+  try {
+    const res = await fetch("https://fhh10sxtvd.execute-api.eu-north-1.amazonaws.com/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+
+    const data = await res.json();
+    
+    // Veri kontrolü
+    if (!res.ok) throw new Error(data.error || "Sunucu hatası: " + res.status);
+    if (!data.reply) throw new Error("Yanıt alınamadı.");
+    
+    typeText(aiMsg, data.reply);
+  } catch (err) {
+    typeText(aiMsg, "Hata: " + err.message);
+  }
+}
+
+input.addEventListener('focus', () => {
+  setTimeout(() => chat.scrollTop = chat.scrollHeight, 300);
+});
+</script>
+</body>
+</html>
